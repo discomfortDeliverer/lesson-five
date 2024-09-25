@@ -73,8 +73,8 @@ public class CategoryController {
     public ResponseMessage deleteCategoryById(@PathVariable int id) {
         ResponseMessage responseMessage = new ResponseMessage();
         try {
-            categoryRepository.deleteCategoryById(id);
-            responseMessage.setMessage("Категория с id - " + id + " удалена");
+            Integer deletedId = categoryRepository.deleteCategoryById(id);
+            responseMessage.setMessage("Категория с id - " + deletedId + " удалена");
         } catch (NoValueExistsByIdException e) {
             responseMessage.setMessage(e.getMessage());
         }
