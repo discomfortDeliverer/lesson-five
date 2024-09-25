@@ -3,9 +3,11 @@ package ru.discomfortdeliverer.lesson_five.controller;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.discomfortdeliverer.lesson_five.aspect.LogExecutionTime;
 import ru.discomfortdeliverer.lesson_five.exception.NoValueExistsByIdException;
 import ru.discomfortdeliverer.lesson_five.model.Location;
 import ru.discomfortdeliverer.lesson_five.repository.LocationRepository;
@@ -17,7 +19,8 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/v1/locations")
 @Slf4j
-public class LocationController {
+@LogExecutionTime
+public class LocationController implements CommandLineRunner {
     private final LocationRepository locationRepository;
     private final KudagoApiService kudagoApiService;
 
@@ -28,9 +31,10 @@ public class LocationController {
         this.kudagoApiService = kudagoApiService;
     }
 
-    @PostConstruct
-    public void init() {
-        log.info("Инициализация LocationController");
+    @LogExecutionTime
+    @Override
+    public void run(String... args) throws Exception {
+        log.info("Инициализация LocationRepository");
         fillRepositoryFromExternalApi();
     }
 

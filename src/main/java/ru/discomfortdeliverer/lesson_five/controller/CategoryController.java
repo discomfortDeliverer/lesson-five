@@ -3,9 +3,11 @@ package ru.discomfortdeliverer.lesson_five.controller;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.discomfortdeliverer.lesson_five.aspect.LogExecutionTime;
 import ru.discomfortdeliverer.lesson_five.exception.NoValueExistsByIdException;
 import ru.discomfortdeliverer.lesson_five.model.Category;
 import ru.discomfortdeliverer.lesson_five.repository.CategoryRepository;
@@ -17,7 +19,8 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/v1/places/categories")
 @Slf4j
-public class CategoryController {
+@LogExecutionTime
+public class CategoryController implements CommandLineRunner {
     private final CategoryRepository categoryRepository;
     private final KudagoApiService kudagoApiService;
 
@@ -28,9 +31,10 @@ public class CategoryController {
         this.kudagoApiService = kudagoApiService;
     }
 
-    @PostConstruct
-    public void init() {
-        log.info("Инициализация CategoryController");
+    @LogExecutionTime
+    @Override
+    public void run(String... args) throws Exception {
+        log.info("Инициализация CategoryRepository");
         fillRepositoryFromExternalApi();
     }
 
@@ -56,7 +60,7 @@ public class CategoryController {
     }
 
     @GetMapping
-    public List<Category> getAllCategories() {
+    public List<Category> getAllCategories() throws InterruptedException {
         return categoryRepository.getAllCategories();
     }
 
@@ -94,4 +98,6 @@ public class CategoryController {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
     }
+
+
 }
