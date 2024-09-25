@@ -1,43 +1,52 @@
 package ru.discomfortdeliverer.lesson_five.controller;
 
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.discomfortdeliverer.lesson_five.exception.NoValueExistsByIdException;
 import ru.discomfortdeliverer.lesson_five.model.Location;
-import ru.discomfortdeliverer.lesson_five.model.ResponseMessage;
 import ru.discomfortdeliverer.lesson_five.repository.LocationRepository;
-import ru.discomfortdeliverer.lesson_five.service.ExternalApiService;
+import ru.discomfortdeliverer.lesson_five.service.KudagoApiService;
 
 import java.util.List;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/locations")
+@Slf4j
 public class LocationController {
     private final LocationRepository locationRepository;
-    private final ExternalApiService externalApiService;
+    private final KudagoApiService kudagoApiService;
 
+    @Autowired
     public LocationController(LocationRepository locationRepository,
-                              ExternalApiService externalApiService) {
+                              KudagoApiService kudagoApiService) {
         this.locationRepository = locationRepository;
-        this.externalApiService = externalApiService;
+        this.kudagoApiService = kudagoApiService;
     }
 
     @PostConstruct
     public void init() {
+        log.info("Инициализация LocationController");
         fillRepositoryFromExternalApi();
     }
 
     private void fillRepositoryFromExternalApi() {
-        List<Location> locations = externalApiService.getLocations();
+        log.info("Начало заполнения LocationRepository данными");
+        List<Location> locations = kudagoApiService.getLocations();
         int id = 1;
         for (Location location : locations) {
+            log.debug("Добавление локации - {} с id - {} в репозиторий", location, id);
             location.setId(id);
             locationRepository.put(location.getId(), location);
             id++;
         }
         locationRepository.setNextId(id);
+        log.info("NextId в locationRepository после добавления всех категорий - {}", id);
+        log.info("Завершение заполнения CategoryRepository данными");
     }
 
     @GetMapping
@@ -46,32 +55,37 @@ public class LocationController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Location> getLocationById(@PathVariable Integer id) {
-        Optional<Location> categoryOptional = locationRepository.getLocationById(id);
-
-        return categoryOptional.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<?> getLocationById(@PathVariable Integer id) {
+        Optional<Location> locationOptional = locationRepository.getLocationById(id);
+        if (locationOptional.isPresent()) {
+            return ResponseEntity.ok(locationOptional.get());
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Локация с id - " + id + " не найдена");
+        }
     }
 
     @PostMapping()
-    public Integer createLocation(@RequestBody Location newLocation) {
+    public Location createLocation(@RequestBody Location newLocation) {
         return locationRepository.createLocation(newLocation);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Location> updateLocationById(@PathVariable int id, @RequestBody Location location) {
-        return ResponseEntity.ok(locationRepository.updateLocationById(id, location));
+    public ResponseEntity<?> updateLocationById(@PathVariable int id, @RequestBody Location location) {
+        try {
+            return ResponseEntity.ok(locationRepository.updateLocationById(id, location));
+        } catch (NoValueExistsByIdException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseMessage deleteLocationById(@PathVariable int id) {
-        ResponseMessage responseMessage = new ResponseMessage();
+    public ResponseEntity<?> deleteLocationById(@PathVariable int id) {
         try {
             Integer deletedId = locationRepository.deleteLocationById(id);
-            responseMessage.setMessage("Город с id - " + deletedId + " удален");
+            return ResponseEntity.ok("Город с id - " + deletedId + " удален");
         } catch (NoValueExistsByIdException e) {
-            responseMessage.setMessage(e.getMessage());
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
-        return responseMessage;
     }
 }

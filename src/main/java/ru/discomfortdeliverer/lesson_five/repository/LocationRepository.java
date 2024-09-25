@@ -1,14 +1,13 @@
 package ru.discomfortdeliverer.lesson_five.repository;
 
 import org.springframework.stereotype.Repository;
-import ru.discomfortdeliverer.lesson_five.model.Category;
 import ru.discomfortdeliverer.lesson_five.model.Location;
 
 import java.util.List;
 import java.util.Optional;
 
 @Repository
-public class LocationRepository extends RepositoryWrapper<Location>{
+public class LocationRepository extends ConcurrentHashMapWrapper<Location> {
     public void put(Integer id, Location location) {
         super.put(id, location);
     }
@@ -21,7 +20,7 @@ public class LocationRepository extends RepositoryWrapper<Location>{
         return super.getValueById(id);
     }
 
-    public Integer createLocation(Location location) {
+    public Location createLocation(Location location) {
         location.setId(super.getNextId());
         return super.createValue(location);
     }

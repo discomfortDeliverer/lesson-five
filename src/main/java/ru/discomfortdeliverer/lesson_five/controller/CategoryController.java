@@ -1,41 +1,50 @@
 package ru.discomfortdeliverer.lesson_five.controller;
 
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.discomfortdeliverer.lesson_five.exception.NoValueExistsByIdException;
 import ru.discomfortdeliverer.lesson_five.model.Category;
-import ru.discomfortdeliverer.lesson_five.model.ResponseMessage;
 import ru.discomfortdeliverer.lesson_five.repository.CategoryRepository;
-import ru.discomfortdeliverer.lesson_five.service.ExternalApiService;
+import ru.discomfortdeliverer.lesson_five.service.KudagoApiService;
 
 import java.util.List;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/places/categories")
+@Slf4j
 public class CategoryController {
     private final CategoryRepository categoryRepository;
-    private final ExternalApiService externalApiService;
+    private final KudagoApiService kudagoApiService;
 
+    @Autowired
     public CategoryController(CategoryRepository categoryRepository,
-                              ExternalApiService externalApiService) {
+                              KudagoApiService kudagoApiService) {
         this.categoryRepository = categoryRepository;
-        this.externalApiService = externalApiService;
+        this.kudagoApiService = kudagoApiService;
     }
 
     @PostConstruct
     public void init() {
+        log.info("Инициализация CategoryController");
         fillRepositoryFromExternalApi();
     }
 
     private void fillRepositoryFromExternalApi() {
-        List<Category> categories = externalApiService.getCategories();
+        log.info("Начало заполнения CategoryRepository данными");
+        List<Category> categories = kudagoApiService.getCategories();
         for (Category category : categories) {
+            log.debug("Добавление категории - {} в репозиторий", category);
             categoryRepository.put(category.getId(), category);
         }
         Integer maxId = findMaxId(categories);
         categoryRepository.setNextId(++maxId);
+        log.info("NextId в categoryRepository после добавления всех категорий - {}", maxId);
+        log.info("Завершение заполнения CategoryRepository данными");
     }
 
     private Integer findMaxId(List<Category> categories) {
@@ -52,32 +61,37 @@ public class CategoryController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Category> getCategoryById(@PathVariable Integer id) {
+    public ResponseEntity<?> getCategoryById(@PathVariable Integer id) {
         Optional<Category> categoryOptional = categoryRepository.getCategoryById(id);
-
-        return categoryOptional.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        if (categoryOptional.isPresent()) {
+            return ResponseEntity.ok(categoryOptional.get());
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Категория с id - " + id + " не найдена");
+        }
     }
 
     @PostMapping()
-    public Integer createCategory(@RequestBody Category newCategory) {
+    public Category createCategory(@RequestBody Category newCategory) {
         return categoryRepository.createCategory(newCategory);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Category> updateCategoryById(@PathVariable int id, @RequestBody Category category) {
-        return ResponseEntity.ok(categoryRepository.updateCategoryById(id, category));
+    public ResponseEntity<?> updateCategoryById(@PathVariable int id, @RequestBody Category category) {
+        try {
+            return ResponseEntity.ok(categoryRepository.updateCategoryById(id, category));
+        } catch (NoValueExistsByIdException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseMessage deleteCategoryById(@PathVariable int id) {
-        ResponseMessage responseMessage = new ResponseMessage();
+    public ResponseEntity<?> deleteCategoryById(@PathVariable int id) {
         try {
             Integer deletedId = categoryRepository.deleteCategoryById(id);
-            responseMessage.setMessage("Категория с id - " + deletedId + " удалена");
+            return ResponseEntity.ok("Категория с id - " + deletedId + " удалена");
         } catch (NoValueExistsByIdException e) {
-            responseMessage.setMessage(e.getMessage());
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
-        return responseMessage;
     }
 }

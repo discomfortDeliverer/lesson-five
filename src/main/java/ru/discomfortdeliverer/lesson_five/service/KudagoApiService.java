@@ -1,5 +1,6 @@
 package ru.discomfortdeliverer.lesson_five.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -11,27 +12,32 @@ import ru.discomfortdeliverer.lesson_five.model.Location;
 import java.util.List;
 
 @Service
-public class ExternalApiService {
-    private final String url = "https://kudago.com/public-api/v1.4/place-categories/";
+@Slf4j
+public class KudagoApiService {
+    private final String categoryUrl = "https://kudago.com/public-api/v1.4/place-categories/";
     private final String locationUrl = "https://kudago.com/public-api/v1.4/locations/";
     private final RestTemplate restTemplate;
 
-    public ExternalApiService(RestTemplate restTemplate) {
+    public KudagoApiService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
 
     public List<Category> getCategories() {
+        log.info("Получение данных по categoryUrl {}", categoryUrl);
         ResponseEntity<List<Category>> response = restTemplate.exchange(
-                url,
+                categoryUrl,
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<List<Category>>() {
                 }
         );
-        return response.getBody();
+        List<Category> categories = response.getBody();
+        log.debug("Полученные данные: {}", categories);
+        return categories;
     }
 
     public List<Location> getLocations() {
+        log.info("Получение данных по categoryUrl {}", locationUrl);
         ResponseEntity<List<Location>> response = restTemplate.exchange(
                 locationUrl,
                 HttpMethod.GET,
@@ -39,6 +45,8 @@ public class ExternalApiService {
                 new ParameterizedTypeReference<List<Location>>() {
                 }
         );
-        return response.getBody();
+        List<Location> locations = response.getBody();
+        log.debug("Полученные данные: {}", locations);
+        return locations;
     }
 }

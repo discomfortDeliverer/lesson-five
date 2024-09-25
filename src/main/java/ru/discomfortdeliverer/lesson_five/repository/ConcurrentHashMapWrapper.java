@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.stereotype.Repository;
 import ru.discomfortdeliverer.lesson_five.exception.NoValueExistsByIdException;
-import ru.discomfortdeliverer.lesson_five.exception.ValueByIdAlreadyExistsException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,13 +11,13 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Repository
-public class RepositoryWrapper<V> {
+public class ConcurrentHashMapWrapper<V> {
     private final ConcurrentHashMap<Integer, V> storage;
     @Setter
     @Getter
     private Integer nextId;
 
-    protected RepositoryWrapper() {
+    protected ConcurrentHashMapWrapper() {
         this.storage = new ConcurrentHashMap<>();
     }
 
@@ -37,11 +36,11 @@ public class RepositoryWrapper<V> {
         return Optional.empty();
     }
 
-    protected Integer createValue(V value) {
+    protected V createValue(V value) {
         int id = nextId;
         storage.put(nextId, value);
         nextId++;
-        return id;
+        return value;
     }
 
     protected V updateValueById(Integer id, V value) {
@@ -49,7 +48,7 @@ public class RepositoryWrapper<V> {
             storage.put(id, value);
             return value;
         } else {
-            throw new NoValueExistsByIdException("Объект с id: " + id + " не уже существует");
+            throw new NoValueExistsByIdException("Объект с id: " + id + " не найден");
         }
     }
 
@@ -58,7 +57,7 @@ public class RepositoryWrapper<V> {
             storage.remove(id);
             return id;
         } else {
-            throw new NoValueExistsByIdException("Объект с id: " + id + " не уже существует");
+            throw new NoValueExistsByIdException("Объект с id: " + id + " не существует");
         }
     }
 }
