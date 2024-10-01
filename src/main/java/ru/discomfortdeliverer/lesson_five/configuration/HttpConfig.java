@@ -7,7 +7,7 @@ import org.springframework.web.client.RestTemplate;
 
 @Configuration
 @EnableAspectJAutoProxy(proxyTargetClass = true)
-public class AppConfig {
+public class HttpConfig {
     @Bean
     public RestTemplate restTemplate() {
         return new RestTemplate();

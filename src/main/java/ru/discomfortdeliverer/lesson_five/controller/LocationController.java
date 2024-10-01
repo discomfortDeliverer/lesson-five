@@ -1,6 +1,7 @@
 package ru.discomfortdeliverer.lesson_five.controller;
 
 import jakarta.annotation.PostConstruct;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -20,38 +21,9 @@ import java.util.Optional;
 @RequestMapping("/api/v1/locations")
 @Slf4j
 @LogExecutionTime
-public class LocationController implements CommandLineRunner {
+@AllArgsConstructor
+public class LocationController{
     private final LocationRepository locationRepository;
-    private final KudagoApiService kudagoApiService;
-
-    @Autowired
-    public LocationController(LocationRepository locationRepository,
-                              KudagoApiService kudagoApiService) {
-        this.locationRepository = locationRepository;
-        this.kudagoApiService = kudagoApiService;
-    }
-
-    @LogExecutionTime
-    @Override
-    public void run(String... args) throws Exception {
-        log.info("Инициализация LocationRepository");
-        fillRepositoryFromExternalApi();
-    }
-
-    private void fillRepositoryFromExternalApi() {
-        log.info("Начало заполнения LocationRepository данными");
-        List<Location> locations = kudagoApiService.getLocations();
-        int id = 1;
-        for (Location location : locations) {
-            log.debug("Добавление локации - {} с id - {} в репозиторий", location, id);
-            location.setId(id);
-            locationRepository.put(location.getId(), location);
-            id++;
-        }
-        locationRepository.setNextId(id);
-        log.info("NextId в locationRepository после добавления всех категорий - {}", id);
-        log.info("Завершение заполнения CategoryRepository данными");
-    }
 
     @GetMapping
     public List<Location> getAllLocations() {
@@ -59,14 +31,8 @@ public class LocationController implements CommandLineRunner {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getLocationById(@PathVariable Integer id) {
-        Optional<Location> locationOptional = locationRepository.getLocationById(id);
-        if (locationOptional.isPresent()) {
-            return ResponseEntity.ok(locationOptional.get());
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Локация с id - " + id + " не найдена");
-        }
+    public Location getLocationById(@PathVariable Integer id) {
+        return locationRepository.getLocationById(id);
     }
 
     @PostMapping()
@@ -75,21 +41,13 @@ public class LocationController implements CommandLineRunner {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateLocationById(@PathVariable int id, @RequestBody Location location) {
-        try {
-            return ResponseEntity.ok(locationRepository.updateLocationById(id, location));
-        } catch (NoValueExistsByIdException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-        }
+    public Location updateLocationById(@PathVariable int id, @RequestBody Location location) {
+        return locationRepository.updateLocationById(id, location);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteLocationById(@PathVariable int id) {
-        try {
-            Integer deletedId = locationRepository.deleteLocationById(id);
-            return ResponseEntity.ok("Город с id - " + deletedId + " удален");
-        } catch (NoValueExistsByIdException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-        }
+    public String deleteLocationById(@PathVariable int id) {
+        Integer deletedId = locationRepository.deleteLocationById(id);
+        return "Локация с id - " + deletedId + " удалена";
     }
 }

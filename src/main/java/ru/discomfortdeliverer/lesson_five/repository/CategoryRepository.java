@@ -2,6 +2,8 @@ package ru.discomfortdeliverer.lesson_five.repository;
 
 
 import org.springframework.stereotype.Repository;
+import ru.discomfortdeliverer.lesson_five.exception.CategoryNotFoundException;
+import ru.discomfortdeliverer.lesson_five.exception.NoValueExistsByIdException;
 import ru.discomfortdeliverer.lesson_five.model.Category;
 
 import java.util.List;
@@ -17,8 +19,12 @@ public class CategoryRepository extends ConcurrentHashMapWrapper<Category> {
         return super.getAllValues();
     }
 
-    public Optional<Category> getCategoryById(Integer id) {
-        return super.getValueById(id);
+    public Category getCategoryById(Integer id) {
+        try {
+            return super.getValueById(id);
+        } catch (NoValueExistsByIdException e) {
+            throw new CategoryNotFoundException("Категория с id - " + id + " не найдена", e);
+        }
     }
 
     public Category createCategory(Category category) {
@@ -28,10 +34,18 @@ public class CategoryRepository extends ConcurrentHashMapWrapper<Category> {
 
     public Category updateCategoryById(Integer id, Category category) {
         category.setId(id);
-        return super.updateValueById(id, category);
+        try {
+            return super.updateValueById(id, category);
+        } catch (NoValueExistsByIdException e) {
+            throw new CategoryNotFoundException("Категория с id - " + id + " не найдена", e);
+        }
     }
 
     public Integer deleteCategoryById(Integer id) {
-        return super.deleteValueById(id);
+        try {
+            return super.deleteValueById(id);
+        } catch (NoValueExistsByIdException e) {
+            throw new CategoryNotFoundException("Категория с id - " + id + " не сущесвует", e);
+        }
     }
 }

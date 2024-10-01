@@ -29,11 +29,11 @@ public class ConcurrentHashMapWrapper<V> {
         return new ArrayList<>(storage.values());
     }
 
-    protected Optional<V> getValueById(Integer id) {
+    protected V getValueById(Integer id) throws NoValueExistsByIdException {
         if (storage.containsKey(id)) {
-            return Optional.of(storage.get(id));
+            return storage.get(id);
         }
-        return Optional.empty();
+        throw new NoValueExistsByIdException("Объект с id " + id + " не найден");
     }
 
     protected V createValue(V value) {
@@ -43,7 +43,7 @@ public class ConcurrentHashMapWrapper<V> {
         return value;
     }
 
-    protected V updateValueById(Integer id, V value) {
+    protected V updateValueById(Integer id, V value) throws NoValueExistsByIdException{
         if (storage.containsKey(id)) {
             storage.put(id, value);
             return value;

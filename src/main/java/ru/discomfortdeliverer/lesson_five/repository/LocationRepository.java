@@ -1,6 +1,9 @@
 package ru.discomfortdeliverer.lesson_five.repository;
 
 import org.springframework.stereotype.Repository;
+import ru.discomfortdeliverer.lesson_five.exception.CategoryNotFoundException;
+import ru.discomfortdeliverer.lesson_five.exception.LocationNotFoundException;
+import ru.discomfortdeliverer.lesson_five.exception.NoValueExistsByIdException;
 import ru.discomfortdeliverer.lesson_five.model.Location;
 
 import java.util.List;
@@ -16,8 +19,12 @@ public class LocationRepository extends ConcurrentHashMapWrapper<Location> {
         return super.getAllValues();
     }
 
-    public Optional<Location> getLocationById(Integer id) {
-        return super.getValueById(id);
+    public Location getLocationById(Integer id) {
+        try {
+            return super.getValueById(id);
+        } catch (NoValueExistsByIdException e) {
+            throw new LocationNotFoundException("Локация с id - " + id + " не найдена", e);
+        }
     }
 
     public Location createLocation(Location location) {
@@ -27,10 +34,18 @@ public class LocationRepository extends ConcurrentHashMapWrapper<Location> {
 
     public Location updateLocationById(Integer id, Location location) {
         location.setId(id);
-        return super.updateValueById(id, location);
+        try {
+            return super.updateValueById(id, location);
+        } catch (NoValueExistsByIdException e) {
+            throw new LocationNotFoundException("Локация с id - " + id + " не найдена", e);
+        }
     }
 
     public Integer deleteLocationById(Integer id) {
-        return super.deleteValueById(id);
+        try {
+            return super.deleteValueById(id);
+        } catch (NoValueExistsByIdException e) {
+            throw new LocationNotFoundException("Локация с id - " + id + " не сущесвует", e);
+        }
     }
 }
