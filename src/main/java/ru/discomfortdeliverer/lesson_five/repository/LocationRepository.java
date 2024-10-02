@@ -45,7 +45,7 @@ public class LocationRepository extends ConcurrentHashMapWrapper<Location> {
         try {
             return super.deleteValueById(id);
         } catch (NoValueExistsByIdException e) {
-            throw new LocationNotFoundException("Локация с id - " + id + " не сущесвует", e);
+            throw new LocationNotFoundException("Локация с id - " + id + " не существует", e);
         }
     }
 }

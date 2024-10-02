@@ -1,21 +1,21 @@
 package ru.discomfortdeliverer.lesson_five.controller;
 
-import jakarta.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import ru.discomfortdeliverer.lesson_five.aspect.LogExecutionTime;
-import ru.discomfortdeliverer.lesson_five.exception.NoValueExistsByIdException;
 import ru.discomfortdeliverer.lesson_five.model.Category;
 import ru.discomfortdeliverer.lesson_five.repository.CategoryRepository;
 import ru.discomfortdeliverer.lesson_five.service.KudagoApiService;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/places/categories")
@@ -24,7 +24,6 @@ import java.util.Optional;
 @AllArgsConstructor
 public class CategoryController {
     private final CategoryRepository categoryRepository;
-    private final KudagoApiService kudagoApiService;
 
     @GetMapping
     public List<Category> getAllCategories() throws InterruptedException {
@@ -37,8 +36,8 @@ public class CategoryController {
     }
 
     @PostMapping()
-    public Category createCategory(@RequestBody Category newCategory) {
-        return categoryRepository.createCategory(newCategory);
+    public Category createCategory(@RequestBody Category category) {
+        return categoryRepository.createCategory(category);
     }
 
     @PutMapping("/{id}")
