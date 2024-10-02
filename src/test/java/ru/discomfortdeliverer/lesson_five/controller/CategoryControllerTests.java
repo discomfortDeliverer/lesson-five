@@ -72,7 +72,7 @@ public class CategoryControllerTests {
     }
 
     @Test
-    void getCategoryById_ShouldThrowLocationNotFoundException() throws Exception {
+    void getCategoryById_ShouldThrowCategoryNotFoundException() throws Exception {
         when(categoryRepository.getCategoryById(5))
                 .thenThrow(new CategoryNotFoundException("Категория с id - 5 не найдена"));
 
@@ -82,7 +82,7 @@ public class CategoryControllerTests {
     }
 
     @Test
-    void createCategory_ShouldReturnCreatedLocationJson() throws Exception {
+    void createCategory_ShouldReturnCreatedCategoryJson() throws Exception {
         Category category = new Category(5, "anticafe", "Антикафе");
         when(categoryRepository.createCategory(any(Category.class))).thenReturn(category);
 
